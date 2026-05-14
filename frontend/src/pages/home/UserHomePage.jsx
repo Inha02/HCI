@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import FaceMeshManager from '../components/FaceMeshManager';
+import FaceMeshManager from '../../components/FaceMeshManager';
 
 // Electron 환경 체크
 const electron = window.require ? window.require('electron') : null;
@@ -12,6 +12,9 @@ const UserHomePage = () => {
   const [isActive, setIsActive] = useState(false); 
   const [showBreakModal, setShowBreakModal] = useState(false); 
   const [breakTimer, setBreakTimer] = useState(20); 
+  
+  // 웹캠 상태 관리 추가
+  const [isWebcamActive, setIsWebcamActive] = useState(false); 
   
   const TOTAL_WORK_TIME = 10; // 테스트 코드 (10초)
 
@@ -73,6 +76,9 @@ const UserHomePage = () => {
 
   return (
     <Container>
+      {/* 웹캠 및 모델 로직 컴포넌트 연결 */}
+      <FaceMeshManager isActive={isWebcamActive} />
+
       {showBreakModal && (
         <FullOverlay>
           <ModalContent>
@@ -89,8 +95,17 @@ const UserHomePage = () => {
 
       <MainContent>
         <TopStatusRow>
-          <WebcamToggle>웹캠 활성화 끄기</WebcamToggle>
-          <StatusBadge>모니터링 중</StatusBadge>
+          {/* 웹캠 토글 버튼: 클릭 시 isWebcamActive 상태 반전 */}
+          <WebcamToggle 
+            onClick={() => setIsWebcamActive(!isWebcamActive)}
+            style={{ backgroundColor: isWebcamActive ? '#FF4B4B' : '#7B86FF', color: 'white' }}
+          >
+            {isWebcamActive ? '웹캠 활성화 끄기' : '웹캠 활성화 켜기'}
+          </WebcamToggle>
+          
+          <StatusBadge>
+            {isWebcamActive ? '모니터링 중' : '모니터링 일시정지'}
+          </StatusBadge>
         </TopStatusRow>
 
         <StatusSection>
@@ -146,43 +161,19 @@ const UserHomePage = () => {
   );
 };
 
-// --- 스타일 컴포넌트 정의 ---
-
-const Container = styled.div`
-  width: 100%;
-  color: white;
-`;
-
-const MainContent = styled.main`
-  flex: 1;
-  padding: 40px 4rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
-`;
-
+// --- 스타일 컴포넌트 정의 (변경 없음) ---
+const Container = styled.div` width: 100%; color: white; `;
+const MainContent = styled.main` flex: 1; padding: 40px 4rem; max-width: 1400px; margin: 0 auto; width: 100%; `;
 const TopStatusRow = styled.div` display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; `;
-const WebcamToggle = styled.button`
-  background: #7B86FF; border: none; color: #0C0F2F; padding: 10px 24px;
-  border-radius: 10px; cursor: pointer; font-size: 1.1rem; font-weight: 800;
-`;
-const StatusBadge = styled.div`
-  background: rgba(76, 175, 80, 0.1); color: #4CAF50; padding: 8px 16px;
-  border-radius: 20px; font-size: 0.95rem; font-weight: 700;
-`;
-
+const WebcamToggle = styled.button` border: none; padding: 10px 24px; border-radius: 10px; cursor: pointer; font-size: 1.1rem; font-weight: 800; transition: all 0.3s ease; `;
+const StatusBadge = styled.div` background: rgba(76, 175, 80, 0.1); color: #4CAF50; padding: 8px 16px; border-radius: 20px; font-size: 0.95rem; font-weight: 700; `;
 const StatusSection = styled.div` display: flex; gap: 50px; margin-bottom: 80px; `;
 const SectionTitle = styled.h2` font-size: 1.75rem; white-space: nowrap; `;
 const StatusCardsWrapper = styled.div` display: flex; gap: 80px; flex: 1; `;
-const StatusCard = styled.div`
-  background: #161B40; padding: 20px; min-width: 300px; border-radius: 25px;
-  display: flex; flex-direction: column; align-items: center; border: 2px solid #7B86FF;
-`;
-
+const StatusCard = styled.div` background: #161B40; padding: 20px; min-width: 300px; border-radius: 25px; display: flex; flex-direction: column; align-items: center; border: 2px solid #7B86FF; `;
 const Label = styled.span` color: #D5D5D5; font-size: 1.2rem; `;
 const StatusMainValue = styled.span` font-size: 3.5rem; font-weight: 800; color: #7B86FF; `;
 const StatusText = styled.span` color: #A0A0A0; `;
-
 const TimerSection = styled.section` margin-top: 10px; `;
 const TimerCard = styled.div` display: flex; align-items: center; gap: 50px; padding: 20px 0; `;
 const BigTime = styled.div` font-size: 4.5rem; font-weight: 800; color: #7B86FF; flex: 0.3; text-align: center; `;
@@ -190,30 +181,14 @@ const TimerDetails = styled.div` flex: 0.7; display: flex; flex-direction: colum
 const TimerInfoRow = styled.div` display: flex; align-items: baseline; gap: 15px; `;
 const TimerLabel = styled.span` color: #D5D5D5; font-size: 1.4rem; font-weight: 600; `;
 const TimeLeft = styled.span` font-size: 1.4rem; font-weight: 700; color: #7B86FF; `;
-
 const ProgressBarContainer = styled.div` width: 100%; height: 20px; background: #333; border-radius: 50px; overflow: hidden; `;
-const ProgressBarInner = styled.div`
-  width: ${props => props.progress}%; height: 100%; background: #7B86FF; transition: width 0.5s ease;
-`;
-
+const ProgressBarInner = styled.div` width: ${props => props.progress}%; height: 100%; background: #7B86FF; transition: width 0.5s ease; `;
 const TimerMessage = styled.p` font-size: 1.1rem; color: #D5D5D5; `;
 const TimerControls = styled.div` display: flex; gap: 15px; `;
-const ControlButton = styled.button`
-  padding: 10px 25px; border-radius: 10px; font-weight: 700; cursor: pointer;
-  background: ${props => props.variant === 'pause' ? '#D5D5D5' : 'transparent'};
-  color: ${props => props.variant === 'pause' ? '#0C0F2F' : '#D5D5D5'};
-  border: ${props => props.variant === 'reset' ? '1px solid #D5D5D5' : 'none'};
-`;
-
-const FullOverlay = styled.div`
-  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-  background: rgba(12, 15, 47, 0.98); display: flex; justify-content: center; align-items: center; z-index: 9999;
-`;
+const ControlButton = styled.button` padding: 10px 25px; border-radius: 10px; font-weight: 700; cursor: pointer; background: ${props => props.variant === 'pause' ? '#D5D5D5' : 'transparent'}; color: ${props => props.variant === 'pause' ? '#0C0F2F' : '#D5D5D5'}; border: ${props => props.variant === 'reset' ? '1px solid #D5D5D5' : 'none'}; `;
+const FullOverlay = styled.div` position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(12, 15, 47, 0.98); display: flex; justify-content: center; align-items: center; z-index: 9999; `;
 const ModalContent = styled.div` text-align: center; `;
 const BreakClock = styled.div` font-size: 10rem; font-weight: 900; color: #7B86FF; margin: 20px 0; `;
-const CloseButton = styled.button`
-  background: transparent; border: 1px solid #7B86FF; color: #7B86FF; padding: 10px 30px;
-  border-radius: 8px; cursor: pointer; &:hover { background: #7B86FF; color: white; }
-`;
+const CloseButton = styled.button` background: transparent; border: 1px solid #7B86FF; color: #7B86FF; padding: 10px 30px; border-radius: 8px; cursor: pointer; &:hover { background: #7B86FF; color: white; } `;
 
 export default UserHomePage;
