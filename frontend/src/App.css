@@ -1,38 +1,43 @@
-.App {
-  text-align: center;
+/* 1. 기본 초기화 (매우 중요) */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* 2. 폰트 파일 정의 (파일 경로만 확인하세요!) */
+@font-face {
+  font-family: 'Pretendard';
+  src: url('./assets/fonts/Pretendard-Bold.woff2') format('woff2');
+  font-weight: 700;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+@font-face {
+  font-family: 'Pretendard';
+  src: url('./assets/fonts/Pretendard-Regular.woff2') format('woff2');
+  font-weight: 400;
 }
 
-.App-header {
-  background-color: #282c34;
+/* 3. 전체 레이아웃 설정 */
+body {
+  margin: 0;
+  background-color: #0C0F2F; /* 배경색 유지 */
+  color: white; /* 글자색 유지 */
+  font-family: 'Pretendard', sans-serif; /* 폰트 추가 */
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
   min-height: 100vh;
-  display: flex;
+  display: flex; /* 내부 요소 정렬을 위해 추가하면 좋음 */
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+/* 4. 태그별 자동 굵기 */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+p, span, div {
+  font-weight: 400;
 }
