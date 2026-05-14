@@ -1,13 +1,27 @@
-const mongoose = require('mongoose');
-
 const EyeSchema = new mongoose.Schema({
-  userId: String,
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
 
-  blinkCount: Number,
-  earValue: Number,
+  sessionId: String,
 
-  isDrowsy: Boolean,
-  gazeStable: Boolean,
+  windowDuration: Number,
+
+  ear: {
+    avg: Number,
+    min: Number,
+    max: Number,
+  },
+
+  blink: {
+    count: Number,
+  },
+
+  drowsiness: {
+    earBelowThresholdTime: Number,
+    isDrowsy: Boolean,
+  },
 
   timestamp: {
     type: Date,
@@ -15,4 +29,4 @@ const EyeSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('Eye', EyeSchema);
+module.exports = mongoose.model('EyeData', EyeSchema);
