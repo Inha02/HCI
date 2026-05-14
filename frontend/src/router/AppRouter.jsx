@@ -13,6 +13,7 @@ import ExerciseCompletePage from '../pages/exercise/ExerciseCompletePage';
 import MyPage from '../pages/user/MyPage';
 import EditUserInfoPage from '../pages/user/EditUserInfoPage';
 import DashboardPage from '../pages/user/DashboardPage';
+import DrowsinessPopup from '../pages/popup/DrowsinessPopup';
 
 function AppRouter() {
   return (
@@ -37,6 +38,7 @@ function AppRouter() {
         <Route path="/exercise3" element={<Mode3Page />} />
         <Route path="/exercisecomplete" element={<ExerciseCompletePage />} />
         <Route path="/editinfo" element={<EditUserInfoPage />} />
+        <Route path="/drowsy-popup" element={<DrowsinessPopup />} />
       </Routes>
     </BrowserRouter>
   );
