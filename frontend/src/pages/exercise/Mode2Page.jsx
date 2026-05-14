@@ -1,14 +1,19 @@
 import React from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom'; 
 import LogoImg from '../../assets/logo.svg';
 
 const Mode2Page = () => {
+  const navigate = useNavigate();
+
   return (
     <Container>
       <Navbar>
         <Logo src={LogoImg} alt="NOON" />
         <ButtonGroup>
-          <GhostButton>운동 중단하기</GhostButton>
+          <GhostButton onClick={() => navigate('/exercisemode')}>
+            운동 중단하기
+          </GhostButton>
         </ButtonGroup>
       </Navbar>
     </Container>
@@ -49,6 +54,12 @@ const GhostButton = styled.button`
   cursor: pointer;
   color: white;
   font-weight: 700;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: white;
+  }
 `;
 
 export default Mode2Page;
