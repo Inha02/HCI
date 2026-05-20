@@ -56,15 +56,7 @@ const ExercisePage = () => {
           ))}
         </CardGrid>
 
-        {/* 최근 운동 기록 섹션 (디자인 하단 참고) */}
-        <HistorySection>
-           <SectionTitle>최근 운동 기록</SectionTitle>
-           <HistoryItem>
-             <HistoryName>초점 전환</HistoryName>
-             <HistoryDate>오늘 16:30</HistoryDate>
-             <HistoryStatus>완료</HistoryStatus>
-           </HistoryItem>
-        </HistorySection>
+        
       </MainContent>
     </Container>
   );
@@ -190,29 +182,6 @@ const StartButton = styled.button`
   }
 `;
 
-const HistorySection = styled.section`
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 10px;
-`;
 
-const SectionTitle = styled.h2`
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin-bottom: 20px;
-`;
-
-const HistoryItem = styled.div`
-  background: rgba(22, 27, 64, 0.5);
-  padding: 15px 25px;
-  border-radius: 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 600px;
-`;
-
-const HistoryName = styled.span` font-weight: 600; `;
-const HistoryDate = styled.span` color: #A0A0A0; font-size: 0.9rem; `;
-const HistoryStatus = styled.span` color: #4CAF50; font-weight: 700; `;
 
 export default ExercisePage;
