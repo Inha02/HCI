@@ -1,13 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
+import AlertSound from '../../assets/sounds/alert.wav'; 
 
 const electron = window.require ? window.require('electron') : null;
 const ipcRenderer = electron ? electron.ipcRenderer : null;
 
 const DrowsinessPopup = () => {
+  
+  // 소리 재생
+  useEffect(() => {
+    const audio = new Audio(AlertSound);
+    audio.volume = 0.7; // 볼륨 설정 (0.0 ~ 1.0)
+    
+    audio.play().catch(error => {
+      console.error("오디오 자동재생 실패:", error);
+    });
+  }, []);
+
   const handleClose = () => {
-    if (ipcRenderer) {
-      
+    if (ipcRenderer) { 
       ipcRenderer.send('close-drowsy-window'); 
     }
   };
