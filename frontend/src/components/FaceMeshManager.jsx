@@ -20,7 +20,8 @@ let maxEarBelowThresholdTime = 0;
 let isDrowsyWindowOpen = false;        // 팝업 중복 방지
 const DROWSY_THRESHOLD_TIME = 1500;    // 1.5초 기준
 
-const FaceMeshManager = ({ isActive }) => {
+// 💡 부모 컴포넌트(UserHomePage)로부터 알림 통합 제어 함수(onDrowsyDetected)를 주입받습니다.
+const FaceMeshManager = ({ isActive, onDrowsyDetected }) => {
   const videoRef = useRef(null);
   const landmarkerRef = useRef(null);
   const requestRef = useRef(null);
@@ -84,9 +85,15 @@ const FaceMeshManager = ({ isActive }) => {
       console.log("%c📊 2초 요약 데이터", "color: #7B86FF; font-weight: bold;");
       console.table(payload); 
 
-      // 졸음 팝업 트리거
-      if (isDrowsyNow && !isDrowsyWindowOpen && ipcRenderer) {
-        ipcRenderer.send('open-drowsy-window');
+      // 💡 졸음 팝업 & 사운드 통합 트리거부 수정
+      if (isDrowsyNow && !isDrowsyWindowOpen) {
+        if (onDrowsyDetected) {
+          // UserHomePage의 소리 재생 및 Electron 신호 전송 함수를 호출합니다.
+          onDrowsyDetected();
+        } else if (ipcRenderer) {
+          // 예외 처리용 백업용 코드
+          ipcRenderer.send('open-drowsy-window');
+        }
         isDrowsyWindowOpen = true;
       }
 
@@ -98,7 +105,7 @@ const FaceMeshManager = ({ isActive }) => {
 
     const intervalId = setInterval(logAndCheckDrowsy, 2000);
     return () => clearInterval(intervalId);
-  }, [isActive]);
+  }, [isActive, onDrowsyDetected]); // 의존성 배열에 onDrowsyDetected 추가
 
   // 3. 팝업 닫힘 이벤트 수신
   useEffect(() => {

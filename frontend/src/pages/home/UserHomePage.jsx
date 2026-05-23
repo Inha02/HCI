@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import FaceMeshManager from '../../components/FaceMeshManager';
+import AlertSound from '../../assets/sounds/alert.wav'; 
 
 // Electron 환경 체크
 const electron = window.require ? window.require('electron') : null;
@@ -13,10 +14,29 @@ const UserHomePage = () => {
   const [showBreakModal, setShowBreakModal] = useState(false); 
   const [breakTimer, setBreakTimer] = useState(20); 
   
-  // 웹캠 상태 관리 추가
+  // 웹캠 상태 관리
   const [isWebcamActive, setIsWebcamActive] = useState(false); 
   
   const TOTAL_WORK_TIME = 10; // 테스트 코드 (10초)
+
+  // --- 💡 졸음 통합 트리거 함수 추가 (팝업 분리 대응) ---
+  const triggerDrowsyAlert = () => {
+    // 1. 알림음 설정(drowsySound) 체크 후 오디오 재생 (팝업창 노출 설정과 완벽 독립)
+    const isSoundEnabled = JSON.parse(localStorage.getItem('drowsySound')) ?? true;
+    if (isSoundEnabled) {
+      const audio = new Audio(AlertSound);
+      audio.volume = 0.7; // 볼륨 설정
+      audio.play().catch(error => console.error("📢 메인 백그라운드 오디오 재생 실패:", error));
+    } else {
+      console.log("📢 알림음 설정이 꺼져 있어 효과음을 출력하지 않습니다.");
+    }
+
+    // 2. 팝업창 띄우기 신호를 Electron 메인으로 전송
+    // (Main.js 내부에서 마이페이지의 'drowsyPopup' 설정을 체크하여 조건부로 창을 띄우거나 차단합니다)
+    if (ipcRenderer) {
+      ipcRenderer.send('open-drowsy-window');
+    }
+  };
 
   // --- 메인 타이머 로직 ---
   useEffect(() => {
@@ -27,17 +47,29 @@ const UserHomePage = () => {
       }, 1000);
     } else if (seconds >= TOTAL_WORK_TIME) {
       setIsActive(false);
-      setShowBreakModal(true); 
       setSeconds(0);
-      
-      if (ipcRenderer) {
-        ipcRenderer.send('open-rest-window');
-      }
+      clearInterval(interval);
 
+      // 1. 화면이 휴식 상태로 전환되는 오버레이는 설정과 관계없이 "항상" 활성화
+      setShowBreakModal(true); 
+
+      // 2. 브라우저 기본 시스템 알림도 항상 발생
       if (Notification.permission === "granted") {
         new Notification("시간이 되었습니다!", { body: "눈을 휴식해주세요." });
       }
-      clearInterval(interval);
+
+      // 3. 마이페이지의 '20-20-20 타이머 팝업' 설정값 체크 (기본값 true)
+      const isTimerEnabled = JSON.parse(localStorage.getItem('timer202020')) ?? true;
+
+      if (isTimerEnabled) {
+        // 토글이 켜져 있을 때만 Electron 메인 프로세스에 서브 팝업창 오픈 신호를 보냄
+        if (ipcRenderer) {
+          ipcRenderer.send('open-rest-window');
+        }
+      } else {
+        console.log("차단됨: 화면 내부 휴식 전환은 유지되지만, Electron 외부 팝업창 생성은 차단되었습니다.");
+      }
+
     } else {
       clearInterval(interval);
     }
@@ -76,8 +108,10 @@ const UserHomePage = () => {
 
   return (
     <Container>
-      {/* 웹캠 및 모델 로직 컴포넌트 연결 */}
-      <FaceMeshManager isActive={isWebcamActive} />
+      {/* 💡 웹캠 및 모델 로직 컴포넌트에 필요시 triggerDrowsyAlert 함수를 바인딩하여 
+        FaceMeshManager 내부에서 졸음 트리거 시점에 직접 호출할 수 있도록 준비해 둡니다.
+      */}
+      <FaceMeshManager isActive={isWebcamActive} onDrowsyDetected={triggerDrowsyAlert} />
 
       {showBreakModal && (
         <FullOverlay>
@@ -87,6 +121,7 @@ const UserHomePage = () => {
             <BreakClock>{breakTimer}s</BreakClock>
             <CloseButton onClick={() => {
               setShowBreakModal(false);
+              setBreakTimer(20); // 타이머 초기화 추가
               if (ipcRenderer) ipcRenderer.send('close-rest-window');
             }}>건너뛰기</CloseButton>
           </ModalContent>
@@ -95,7 +130,6 @@ const UserHomePage = () => {
 
       <MainContent>
         <TopStatusRow>
-          {/* 웹캠 토글 버튼: 클릭 시 isWebcamActive 상태 반전 */}
           <WebcamToggle 
             onClick={() => setIsWebcamActive(!isWebcamActive)}
             style={{ backgroundColor: isWebcamActive ? '#FF4B4B' : '#7B86FF', color: 'white' }}
@@ -150,7 +184,8 @@ const UserHomePage = () => {
                   <ControlButton variant="pause" onClick={() => setIsActive(!isActive)}>
                     {isActive ? '일시정지' : '재개'}
                   </ControlButton>
-                )}
+                )
+                }
                 <ControlButton variant="reset" onClick={() => { setIsActive(false); setSeconds(0); }}>리셋</ControlButton>
               </TimerControls>
             </TimerDetails>
@@ -161,7 +196,7 @@ const UserHomePage = () => {
   );
 };
 
-// --- 스타일 컴포넌트 정의 (변경 없음) ---
+// --- 스타일 컴포넌트 정의 ---
 const Container = styled.div` width: 100%; color: white; `;
 const MainContent = styled.main` flex: 1; padding: 40px 4rem; max-width: 1400px; margin: 0 auto; width: 100%; `;
 const TopStatusRow = styled.div` display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; `;
