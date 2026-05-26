@@ -18,6 +18,9 @@ app.get('/', (req, res) => {
   res.send('Server is running');
 });
 
+const authRouter = require('./routes/auth');
+
+app.use('/auth', authRouter);
 
 app.use('/api/eye', require('./routes/eyeRoutes'));
 
