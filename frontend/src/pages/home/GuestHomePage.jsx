@@ -1,15 +1,22 @@
 import React from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom'; // 💡 페이지 이동을 위한 useNavigate 임포트
 import LogoImg from '../../assets/logo.svg';
 
 const GuestHomePage = () => {
+  const navigate = useNavigate(); // 💡 네비게이터 함수 선언
+
+  const handleGoToLogin = () => {
+    navigate('/login'); // 💡 로그인 페이지로 이동시킵니다.
+  };
+
   return (
     <Container>
       <Navbar>
         <Logo src={LogoImg} alt="NOON" />
         <ButtonGroup>
-          <GhostButton>로그인</GhostButton>
-          <PrimaryButton>시작하기</PrimaryButton>
+          {/* 💡 div 버튼에 클릭 이벤트 연결 */}
+          <GhostButton onClick={handleGoToLogin}>로그인</GhostButton>
         </ButtonGroup>
       </Navbar>
 
@@ -53,7 +60,8 @@ const GuestHomePage = () => {
       <Footer>
         <InfoText>하루 평균 눈 깜빡임 정상치 15~20회/분</InfoText>
         <FooterTitle>지금 바로 눈 건강을 확인하세요!</FooterTitle>
-        <OutlineButton>바로 시작하기</OutlineButton>
+        {/* 💡 div 버튼에 클릭 이벤트 연결 */}
+        <OutlineButton onClick={handleGoToLogin}>바로 시작하기</OutlineButton>
       </Footer>
     </Container>
   );
@@ -93,6 +101,7 @@ const ButtonGroup = styled.div`
   align-items: center;
 `;
 
+// 기존 PrimaryButton 컴포넌트 유지 (필요 시 아래처럼 div로 교체 가능)
 const PrimaryButton = styled.button`
   background-color: #7B86FF;
   color: white;
@@ -100,11 +109,11 @@ const PrimaryButton = styled.button`
   border-radius: 10px;
   border: none;
   cursor: pointer;
-  /* font-weight: 700(Bold)는 App.js의 button 혹은 공통 설정에서 오지 않으므로 필요시만 추가 */
   font-weight: 700; 
 `;
 
-const GhostButton = styled.button`
+// 💡 styled.button에서 styled.div로 변경하여 폰트 상속 문제를 완벽 해결했습니다.
+const GhostButton = styled.div`
   background: none;
   border: 1px solid #7B86FF;
   padding: 10px 20px;
@@ -112,6 +121,15 @@ const GhostButton = styled.button`
   cursor: pointer;
   color: white;
   font-weight: 700;
+  
+  /* 정렬 및 글자 드래그 방지용 스타일 보완 */
+  display: inline-block;
+  text-align: center;
+  user-select: none;
+
+  &:hover {
+    opacity: 0.9;
+  }
 `;
 
 const HeroSection = styled.header`
@@ -123,14 +141,12 @@ const MainTitle = styled.h1`
   font-size: 3.5rem;
   margin-bottom: 50px;
   margin-top:50px;
-  /* font-weight: 700 자동 적용됨 */
 `;
 
 const SubDescription = styled.p`
   font-size: 1.7rem;
   line-height: 1.6;
   color: #D5D5D5; 
-  /* h4이므로 App.js 설정에 의해 700이 적용됨 */
 `;
 
 const FeatureSection = styled.section`
@@ -140,7 +156,6 @@ const FeatureSection = styled.section`
 
 const SectionTitle = styled.h2`
   font-size: 2rem;
-  /* font-weight: 700 자동 적용됨 */
 `;
 
 const SectionSubtitle = styled.p`
@@ -148,7 +163,7 @@ const SectionSubtitle = styled.p`
   margin-top:30px;
   margin-bottom: 50px;
   font-size: 1.5rem;
-  font-weight: 700; /* p태그 중 강조하고 싶은 부분만 별도 지정 */
+  font-weight: 700;
 `;
 
 const Grid = styled.div`
@@ -198,7 +213,8 @@ const FooterTitle = styled.h4`
   margin-bottom: 30px;
 `;
 
-const OutlineButton = styled.button`
+// 💡 styled.button에서 styled.div로 변경하여 폰트 상속 문제를 완벽 해결했습니다.
+const OutlineButton = styled.div`
   background-color: #7B86FF;
   color: white;
   border: none;
@@ -207,6 +223,15 @@ const OutlineButton = styled.button`
   font-size: 2.5rem;
   font-weight: 700;
   cursor: pointer;
+  
+  /* 정렬 및 글자 드래그 방지용 스타일 보완 */
+  display: inline-block;
+  text-align: center;
+  user-select: none;
+
+  &:hover {
+    background-color: #626ee6;
+  }
 `;
 
 export default GuestHomePage;

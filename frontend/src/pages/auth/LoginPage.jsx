@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom'; // 💡 페이지 이동을 위해 useNavigate 임포트
 import LogoImg from '../../assets/logo.svg';
 import KakaoLoginImg from '../../assets/kakaologin.svg'; 
 
@@ -7,17 +8,17 @@ const electron = window.require ? window.require('electron') : null;
 const ipcRenderer = electron ? electron.ipcRenderer : null;
 
 const LoginPage = () => {
+  const navigate = useNavigate(); // 💡 네비게이터 함수 선언
 
   const handleKakaoLogin = () => {
-    console.log("카카오 로그인 버튼 클릭됨");
-    
-    // Electron 환경일 경우 메인 프로세스에 로그인 창 오픈 요청 보냄
-    if (ipcRenderer) {
-      ipcRenderer.send('kakao-login-request');
-    } else {
-      // 웹 브라우저 테스트 환경용
-      // window.location.href = `https://kauth.kakao.com/oauth/authorize?...`;
-    }
+    console.log("카카오 로그인 버튼 클릭됨 -> 백엔드 인증 라우트로 이동");
+    const BACKEND_KAKAO_URL = "http://localhost:5001/auth/kakao";
+    window.location.href = BACKEND_KAKAO_URL;
+  };
+
+  // 💡 비회원 메인(GuestHomePage, 주소 '/')으로 돌아가는 함수
+  const handleGoBack = () => {
+    navigate('/');
   };
 
   return (
@@ -28,12 +29,16 @@ const LoginPage = () => {
         <KakaoButton onClick={handleKakaoLogin}>
           <img src={KakaoLoginImg} alt="카카오 로그인" />
         </KakaoButton>
+        
+        <BackButton onClick={handleGoBack}>
+          메인으로 돌아가기
+        </BackButton>
       </ContentArea>
     </Container>
   );
 };
 
-// --- 스타일 컴포넌트 정의 ---
+
 
 const Container = styled.div`
   width: 100%;
@@ -44,6 +49,7 @@ const Container = styled.div`
   justify-content: center;
   align-items: center;
   overflow: hidden;
+  font-family: 'Pretendard', sans-serif;
 `;
 
 const ContentArea = styled.div`
@@ -65,10 +71,9 @@ const Logo = styled.img`
 const TitleText = styled.h2`
   font-size: 1.8rem;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: 25px;
   letter-spacing: -0.5px;
 `;
-
 
 const KakaoButton = styled.button`
   background: none;
@@ -79,6 +84,7 @@ const KakaoButton = styled.button`
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-bottom: 20px; 
 
   img {
     width: 100%;
@@ -93,6 +99,22 @@ const KakaoButton = styled.button`
 
   &:active {
     transform: scale(0.98);
+  }
+`;
+
+const BackButton = styled.div`
+  color: #A0A0A0;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  margin-top: 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #ffffff;
   }
 `;
 
