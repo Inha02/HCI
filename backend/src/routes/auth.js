@@ -65,7 +65,7 @@ router.get('/kakao/callback', async (req, res) => {
     if (!user) {
       user = await User.create({
         email,
-        nickname,
+        name: nickname,
         profileImage,
         socialType: 'kakao',
         socialId: kakaoId,
