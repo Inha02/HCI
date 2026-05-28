@@ -29,5 +29,6 @@ app.use('/api/exercise', require('./routes/exerciseRoutes'));
 app.use('/api/eye', require('./routes/eyeRoutes'));
 app.use('/api/exercise', require('./routes/exerciseRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
+app.use('/auth', require('./routes/auth'));
 
 module.exports = app;

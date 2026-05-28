@@ -13,6 +13,15 @@ const options = {
         url: 'http://localhost:5001',
       },
     ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
   },
   apis: ['./src/routes/*.js'], // 여기 중요
 };
