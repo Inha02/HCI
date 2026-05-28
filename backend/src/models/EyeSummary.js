@@ -21,6 +21,7 @@ const EyeSummarySchema = new mongoose.Schema({
   drowsyCount: {
     type: Number,
     default: 0,
+    max: 1,
   },
 
   // 졸음이 감지된 시간들
