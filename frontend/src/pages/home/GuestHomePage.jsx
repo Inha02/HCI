@@ -1,13 +1,13 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom'; // 💡 페이지 이동을 위한 useNavigate 임포트
+import { useNavigate } from 'react-router-dom'; 
 import LogoImg from '../../assets/logo.svg';
 
 const GuestHomePage = () => {
-  const navigate = useNavigate(); // 💡 네비게이터 함수 선언
+  const navigate = useNavigate(); 
 
   const handleGoToLogin = () => {
-    navigate('/login'); // 💡 로그인 페이지로 이동시킵니다.
+    navigate('/login'); 
   };
 
   return (
@@ -15,7 +15,6 @@ const GuestHomePage = () => {
       <Navbar>
         <Logo src={LogoImg} alt="NOON" />
         <ButtonGroup>
-          {/* 💡 div 버튼에 클릭 이벤트 연결 */}
           <GhostButton onClick={handleGoToLogin}>로그인</GhostButton>
         </ButtonGroup>
       </Navbar>
@@ -101,7 +100,6 @@ const ButtonGroup = styled.div`
   align-items: center;
 `;
 
-// 기존 PrimaryButton 컴포넌트 유지 (필요 시 아래처럼 div로 교체 가능)
 const PrimaryButton = styled.button`
   background-color: #7B86FF;
   color: white;
@@ -112,7 +110,6 @@ const PrimaryButton = styled.button`
   font-weight: 700; 
 `;
 
-// 💡 styled.button에서 styled.div로 변경하여 폰트 상속 문제를 완벽 해결했습니다.
 const GhostButton = styled.div`
   background: none;
   border: 1px solid #7B86FF;
@@ -213,7 +210,6 @@ const FooterTitle = styled.h4`
   margin-bottom: 30px;
 `;
 
-// 💡 styled.button에서 styled.div로 변경하여 폰트 상속 문제를 완벽 해결했습니다.
 const OutlineButton = styled.div`
   background-color: #7B86FF;
   color: white;

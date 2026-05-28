@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom'; // 💡 페이지 이동을 위해 useNavigate 임포트
+import { useNavigate } from 'react-router-dom'; 
 import LogoImg from '../../assets/logo.svg';
 import KakaoLoginImg from '../../assets/kakaologin.svg'; 
 
@@ -8,7 +8,7 @@ const electron = window.require ? window.require('electron') : null;
 const ipcRenderer = electron ? electron.ipcRenderer : null;
 
 const LoginPage = () => {
-  const navigate = useNavigate(); // 💡 네비게이터 함수 선언
+  const navigate = useNavigate(); 
 
   const handleKakaoLogin = () => {
     console.log("카카오 로그인 버튼 클릭됨 -> 백엔드 인증 라우트로 이동");
@@ -16,7 +16,7 @@ const LoginPage = () => {
     window.location.href = BACKEND_KAKAO_URL;
   };
 
-  // 💡 비회원 메인(GuestHomePage, 주소 '/')으로 돌아가는 함수
+
   const handleGoBack = () => {
     navigate('/');
   };

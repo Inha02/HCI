@@ -39,6 +39,17 @@ const MyPage = () => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('token');
+    
+    if (electron && electron.remote) {
+    electron.remote.session.defaultSession.clearStorageData();
+    }
+
+    window.location.href = '/login';
+  };
+
   return (
     <Container>
       <Wrapper>
@@ -50,6 +61,8 @@ const MyPage = () => {
           </UserTextGroup>
           <UserActionGroup>
             <JoinDate>가입일: {userInfo.joinDate}</JoinDate>
+            {/* 🚪 로그아웃 버튼 */}
+            <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
             <EditButton onClick={() => navigate('/editinfo')}>수정하기</EditButton>
           </UserActionGroup>
         </UserInfoSection>
@@ -126,8 +139,27 @@ const UserInfoSection = styled.div` display: flex; justify-content: space-betwee
 const UserTextGroup = styled.div``;
 const Nickname = styled.h1` font-size: 2.8rem; color: white; margin-bottom: 10px; font-weight: 700; `;
 const Email = styled.p` font-size: 1.2rem; color: #A0A0A0; `;
-const UserActionGroup = styled.div` display: flex; align-items: center; gap: 20px; `;
-const JoinDate = styled.span` font-size: 1.1rem; color: #A0A0A0; `;
+const UserActionGroup = styled.div` display: flex; align-items: center; gap: 15px; `;
+const JoinDate = styled.span` font-size: 1.1rem; color: #A0A0A0; margin-right: 5px; `;
+
+const LogoutButton = styled.button`
+  background-color: rgba(255, 99, 99, 0.15);
+  color: #FF6363;
+  border: 1px solid rgba(255, 99, 99, 0.4);
+  padding: 10px 25px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
+  
+  &:hover {
+    background-color: #FF6363;
+    color: white;
+    border-color: #FF6363;
+  }
+`;
+
 const EditButton = styled.button` background-color: #7B86FF; color: white; border: none; padding: 10px 25px; border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 1rem; &:hover { background-color: #626ee6; } `;
 const Divider = styled.div` width: 100%; height: 1px; background-color: rgba(213, 213, 213, 0.2); margin-bottom: 50px; `;
 const SettingsSection = styled.div``;

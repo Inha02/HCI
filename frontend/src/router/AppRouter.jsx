@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from '../components/Layout'; 
 import LoginPage from '../pages/auth/LoginPage';
-import KakaoCallback from '../pages/auth/KakaoCallback'; // 💡 이전 안내문 카카오 콜백 컴포넌트 추가
+import KakaoCallback from '../pages/auth/KakaoCallback';
 import GuestHomePage from '../pages/home/GuestHomePage';
 import UserHomePage from '../pages/home/UserHomePage';
 import BreakPopup from '../pages/popup/BreakPopup';
