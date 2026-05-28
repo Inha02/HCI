@@ -31,6 +31,7 @@ exports.receiveEyeData = async (req, res) => {
     // isDrowsy가 true일 때만 timestamp 저장
     if (drowsiness?.isDrowsy === true) {
       eyeBuffer[key].drowsyTimestamps.push(new Date());
+      eyeBuffer[key].drowsyCount += 1;
     }
 
     const now = Date.now();
@@ -41,6 +42,7 @@ exports.receiveEyeData = async (req, res) => {
         userId: eyeBuffer[key].userId,
         sessionId: eyeBuffer[key].sessionId,
         blinkPerMinute: eyeBuffer[key].blinkTotal,
+        drowsyCount: eyeBuffer[key].drowsyTimestamps.length > 0 ? 1 : 0,
         drowsyTimestamps: eyeBuffer[key].drowsyTimestamps,
         startTime: eyeBuffer[key].startTime,
         endTime: new Date(),
@@ -51,6 +53,7 @@ exports.receiveEyeData = async (req, res) => {
         userId,
         sessionId,
         blinkTotal: 0,
+        drowsyCount: 0,
         drowsyTimestamps: [],
         startTime: new Date(),
         lastSavedAt: Date.now(),
