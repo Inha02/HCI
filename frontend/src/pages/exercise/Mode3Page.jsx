@@ -21,10 +21,35 @@ const Mode3Page = () => {
 
   const TOTAL_SETS = 3;
 
-  // --- Refs (웹캠 및 미디어파이프 분석용) ---
   const videoRef = useRef(null);
   const landmarkerRef = useRef(null);
   const requestRef = useRef(null);
+
+
+  const completeExercise = async () => {
+    const payload = {
+      userId: "6a171e97e513581fb9f3b6bf",
+      type: "BLINK",
+      duration: 60,
+      success: true,
+      score: 100
+    };
+
+    try {
+      await fetch('http://localhost:5001/api/exercise/logs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      console.log('눈 꼭 감기 운동 기록 저장 성공');
+    } catch (error) {
+      console.error('눈 꼭 감기 운동 기록 저장 실패:', error);
+    } finally {
+      navigate('/exercisecomplete');
+    }
+  };
 
   // --- EAR 계산 함수 ---
   const calculateEAR = (landmarks, eye) => {
@@ -66,7 +91,7 @@ const Mode3Page = () => {
     };
   }, []);
 
-  // 2. 실시간 웹캠 프레임 분석 루프 (운동이 활성화되어 있고, 대기 시간이 아닐 때만 가동)
+  
   useEffect(() => {
     let stream = null;
 
@@ -120,7 +145,7 @@ const Mode3Page = () => {
   }, [isStarted, isSetIntermission]);
 
 
-  // 3. 타이머 로직 (눈을 감고 있고 세트 대기 상태가 아닐 때만 시간이 흐름)
+  // 타이머 로직 
   useEffect(() => {
     if (!isStarted || isSetIntermission) return;
 
@@ -133,23 +158,21 @@ const Mode3Page = () => {
     } 
     else if (timeLeft === 0) {
       if (currentSet < TOTAL_SETS) {
-        // 바로 다음 세트로 가지 않고 인터미션(대기) 상태로 전환
         setIsSetIntermission(true);
       } else {
-        // 모든 세트 완료 시
-        navigate('/exercisecomplete');
+        completeExercise();
       }
     }
 
     return () => clearInterval(timer);
-  }, [isStarted, isSetIntermission, isEyeClosed, timeLeft, currentSet, navigate]);
+  }, [isStarted, isSetIntermission, isEyeClosed, timeLeft, currentSet]);
 
   // 다음 세트 시작 처리 함수
   const handleNextSetStart = () => {
     setCurrentSet((prev) => prev + 1);
-    setTimeLeft(5); // 타이머 리셋
-    setIsEyeClosed(true); // 눈 감음 상태 초기화 (경고 방지)
-    setIsSetIntermission(false); // 대기 상태 해제 -> 캠 및 타이머 재가동
+    setTimeLeft(5); 
+    setIsEyeClosed(true); 
+    setIsSetIntermission(false); 
   };
 
 
@@ -164,7 +187,6 @@ const Mode3Page = () => {
         </ButtonGroup>
       </Navbar>
 
-      {/* 분석을 위한 히든 비디오 태그 */}
       <video
         ref={videoRef}
         autoPlay
@@ -175,14 +197,12 @@ const Mode3Page = () => {
       <ExerciseArea>
         <InstructionSection>
           <Title>눈 꼭 감기</Title>
-          {/* 요청하신 안내 멘트 추가 */}
           <SubTitle>
             눈을 꼭 감고 5초 동안 유지하세요.<br />
             <span>* '눈 감기 시작' 버튼을 누르면 웹캠과 연결되어 실제로 눈을 감고 있는지 확인합니다.</span>
           </SubTitle>
         </InstructionSection>
 
-        {/* 중앙 인터랙션 제어 */}
         <CenterContent>
           {!isStarted ? (
             <StartButton 
@@ -192,7 +212,6 @@ const Mode3Page = () => {
               {isModelLoaded ? "눈 감기 시작" : "준비 중..."}
             </StartButton>
           ) : isSetIntermission ? (
-            // 세트 종료 후 사용자가 수동으로 다음 세트를 넘어가게 하는 인터페이스
             <>
               <CompletedText>{currentSet}세트 완료!</CompletedText>
               <StartButton onClick={handleNextSetStart}>
@@ -201,12 +220,11 @@ const Mode3Page = () => {
             </>
           ) : (
             <>
-              {/* 눈을 감았을 땐 숫자 카운트, 떴을 땐 경고 ! 마크 */}
-              <CountText error={!isEyeClosed}>
+              <CountText $error={!isEyeClosed}>
                 {isEyeClosed ? timeLeft : "!"}
               </CountText>
               
-              <StatusMessage error={!isEyeClosed}>
+              <StatusMessage $error={!isEyeClosed}>
                 {isEyeClosed ? "눈을 꼭 감고 있으세요" : "⚠️ 눈을 감아주세요! 운동이 일시정지 되었습니다."}
               </StatusMessage>
             </>
@@ -219,7 +237,6 @@ const Mode3Page = () => {
             <span>{TOTAL_SETS}세트</span>
           </ProgressInfo>
           <ProgressBarContainer>
-            {/* 세트 경과 상황을 직관적으로 반영하는 진행률 바 */}
             <ProgressBarInner progress={((currentSet - 1 + (5 - timeLeft) / 5) / TOTAL_SETS) * 100} />
           </ProgressBarContainer>
         </ProgressSection>
@@ -229,7 +246,6 @@ const Mode3Page = () => {
 };
 
 // --- 스타일 컴포넌트 정의 ---
-
 const Container = styled.div`
   width: 100%;
   height: 100vh;
@@ -343,10 +359,11 @@ const CompletedText = styled.div`
   animation: fadeIn 0.5s ease-in-out;
 `;
 
+// DOM 경고를 없애기 위해 transient prop $error 적용
 const CountText = styled.div`
   font-size: 10rem;
   font-weight: 900;
-  color: ${props => props.error ? '#FF5252' : '#7B86FF'};
+  color: ${props => props.$error ? '#FF5252' : '#7B86FF'};
   line-height: 1;
   transition: color 0.3s;
 `;
@@ -354,7 +371,7 @@ const CountText = styled.div`
 const StatusMessage = styled.p`
   font-size: 1.8rem;
   font-weight: 700;
-  color: ${props => props.error ? '#FF5252' : 'white'};
+  color: ${props => props.$error ? '#FF5252' : 'white'};
   text-align: center;
   transition: color 0.3s;
 `;

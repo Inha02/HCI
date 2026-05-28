@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 
-// 아이콘이나 이미지가 있다면 import 하세요. 여기서는 임시 텍스트 아이콘을 사용합니다.
 const ExercisePage = () => {
   const navigate = useNavigate();
+  
+  const [completedCount, setCompletedCount] = useState(0);
 
-  // 운동 데이터 리스트
+  const userId = '6a171e97e513581fb9f3b6bf';
+
   const exercises = [
     {
       id: 1,
@@ -31,19 +33,45 @@ const ExercisePage = () => {
     },
   ];
 
+  useEffect(() => {
+    const fetchExerciseLogs = async () => {
+      const types = ['TRACKING', 'FOCUS', 'BLINK'];
+      
+      try {
+        const promises = types.map(type =>
+          fetch(`http://localhost:5001/api/exercise/logs?userId=${userId}&type=${type}`)
+            .then(res => res.json())
+            .catch(err => ({ success: false, error: err.message }))
+        );
+
+        const results = await Promise.all(promises);
+        console.log("백데이터", results);
+
+        const trueCount = results.filter(result => {
+            return result.success === true && result.data && result.data.length > 0;
+          }).length;
+        
+        setCompletedCount(trueCount);
+        console.log(`안구 운동 로그 조회 완료 (성공 개수: ${trueCount}/3)`);
+      } catch (error) {
+        console.error('운동 로그 정보를 가져오는 중 에러 발생:', error);
+      }
+    };
+
+    fetchExerciseLogs();
+  }, [userId]);
+
   return (
     <Container>
       <MainContent>
-        {/* 상단 헤더 섹션 */}
         <HeaderSection>
           <TitleRow>
             <PageTitle>안구 운동</PageTitle>
-            <StatusBadge>오늘 운동 현황 2/3 완료</StatusBadge>
+            <StatusBadge>오늘 운동 현황 {completedCount}/3 완료</StatusBadge>
           </TitleRow>
           <SubTitle>눈의 피로를 풀어주는 3가지 안구 운동을 선택하세요!</SubTitle>
         </HeaderSection>
 
-        {/* 운동 카드 리스트 섹션 */}
         <CardGrid>
           {exercises.map((ex) => (
             <ExerciseCard key={ex.id}>
@@ -55,13 +83,10 @@ const ExercisePage = () => {
             </ExerciseCard>
           ))}
         </CardGrid>
-
-        
       </MainContent>
     </Container>
   );
 };
-
 
 const Container = styled.div`
   width: 100%;
@@ -181,7 +206,5 @@ const StartButton = styled.button`
     background: #6a76f0;
   }
 `;
-
-
 
 export default ExercisePage;

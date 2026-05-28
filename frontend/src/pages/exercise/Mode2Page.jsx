@@ -5,25 +5,50 @@ import LogoImg from '../../assets/logo.svg';
 
 const Mode2Page = () => {
   const navigate = useNavigate();
-  const [count, setCount] = useState(0); // 반복 횟수 상태
-  const TOTAL_COUNT = 10; // 총 10회 반복
+  const [count, setCount] = useState(0); 
+  const TOTAL_COUNT = 10; 
+
+
+  const completeExercise = async () => {
+    const payload = {
+      userId: "6a171e97e513581fb9f3b6bf",
+      type: "FOCUS", 
+      duration: 60,
+      success: true,
+      score: 100 
+    };
+
+    try {
+      await fetch('http://localhost:5001/api/exercise/logs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      console.log('초점 전환 운동 기록 저장 성공');
+    } catch (error) {
+      console.error('초점 전환 운동 기록 저장 실패:', error);
+    } finally {
+      navigate('/exercisecomplete');
+    }
+  };
 
   useEffect(() => {
-    // 10회 반복이 끝나면 완료 페이지로 이동
     if (count >= TOTAL_COUNT) {
       const timer = setTimeout(() => {
-        navigate('/exercisecomplete');
-      }, 1000); // 마지막 애니메이션이 끝날 시간을 위해 약간의 지연
+        completeExercise();
+      }, 1000); 
       return () => clearTimeout(timer);
     }
 
-    // 텍스트 크기 변화 주기에 맞춰 카운트 증가 (애니메이션 주기 4초 기준)
+
     const interval = setInterval(() => {
       setCount((prev) => prev + 1);
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [count, navigate]);
+  }, [count]);
 
   return (
     <Container>
@@ -62,9 +87,6 @@ const Mode2Page = () => {
   );
 };
 
-// --- 애니메이션 및 스타일 ---
-
-// 텍스트가 커졌다 작아지는 애니메이션 (수정체 원근 조절 유도)
 const scaleUpDown = keyframes`
   0%, 100% { transform: scale(1); opacity: 0.5; }
   50% { transform: scale(4); opacity: 1; }

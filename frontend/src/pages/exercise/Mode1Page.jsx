@@ -8,9 +8,35 @@ const Mode1Page = () => {
   const [timeLeft, setTimeLeft] = useState(15);
   const TOTAL_TIME = 15;
 
+
+  const completeExercise = async () => {
+    const payload = {
+      userId: "6a171e97e513581fb9f3b6bf",
+      type: "TRACKING", 
+      duration: 60,
+      success: true,
+      score: 100 
+    };
+
+    try {
+      await fetch('http://localhost:5001/api/exercise/logs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      console.log('운동 기록 저장 성공');
+    } catch (error) {
+      console.error('운동 기록 저장 실패:', error);
+    } finally {
+      navigate('/exercisecomplete');
+    }
+  };
+
   useEffect(() => {
     if (timeLeft <= 0) {
-      navigate('/exercisecomplete');
+      completeExercise();
       return;
     }
 
@@ -19,14 +45,13 @@ const Mode1Page = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, navigate]);
+  }, [timeLeft]);
 
   return (
     <Container>
       <Navbar>
         <Logo src={LogoImg} alt="NOON" />
         <ButtonGroup>
-          {/* 버튼 디자인을 처음 코드로 복구 */}
           <GhostButton onClick={() => navigate('/exercisemode')}>
             운동 중단하기
           </GhostButton>
@@ -39,15 +64,14 @@ const Mode1Page = () => {
           <SubTitle>점을 눈으로 따라가세요. 머리는 움직이지 마세요.</SubTitle>
         </InstructionSection>
 
-        {/* 포인트가 노는 영역을 제한하기 위한 컨테이너 */}
         <Stage>
-          <MovingPoint />
+          {timeLeft > 0 && <MovingPoint />}
         </Stage>
 
         <ProgressSection>
           <ProgressInfo>
             <span>1세트</span>
-            <span>{timeLeft}초</span>
+            <span>{timeLeft > 0 ? timeLeft : 0}초</span>
           </ProgressInfo>
           <ProgressBarContainer>
             <ProgressBarInner progress={(timeLeft / TOTAL_TIME) * 100} />
@@ -58,15 +82,12 @@ const Mode1Page = () => {
   );
 };
 
-// --- 애니메이션 및 스타일 ---
-
-// 포인트가 화면 하단 글씨를 침범하지 않도록 범위를 10% ~ 85% 사이로 조정
 const movePattern = keyframes`
   0% { top: 50%; left: 50%; }
-  20% { top: 15%; left: 85%; }   /* 우상단 */
-  40% { top: 75%; left: 15%; }   /* 좌하단 (너무 내려가지 않게 조정) */
-  60% { top: 40%; left: 10%; }   /* 왼쪽 */
-  80% { top: 40%; left: 90%; }   /* 오른쪽 */
+  20% { top: 15%; left: 85%; }
+  40% { top: 75%; left: 15%; }
+  60% { top: 40%; left: 10%; }
+  80% { top: 40%; left: 90%; }
   100% { top: 50%; left: 50%; }
 `;
 
@@ -84,11 +105,11 @@ const Navbar = styled.nav`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 4rem; /* 기존 패딩 유지 */
+  padding: 0 4rem;
 `;
 
 const Logo = styled.img`
-  width: 100px; /* 처음 코드 크기 복구 */
+  width: 100px;
   height: 100px;
 `;
 
@@ -98,7 +119,6 @@ const ButtonGroup = styled.div`
   align-items: center;
 `;
 
-// 처음 보내주신 GhostButton 디자인 그대로 유지
 const GhostButton = styled.button`
   background: none;
   border: 1px solid #D5D5D5;
@@ -128,6 +148,7 @@ const ExerciseArea = styled.div`
 const InstructionSection = styled.div`
   text-align: center;
   margin-top: 20px;
+ daytime;
 `;
 
 const Title = styled.h2`
@@ -141,11 +162,10 @@ const SubTitle = styled.p`
   color: #A0A0A0;
 `;
 
-/* 포인트 이동 영역 제한 컨테이너 */
 const Stage = styled.div`
   position: absolute;
-  top: 25%; /* 제목 아래부터 */
-  bottom: 25%; /* 프로그레스 바 위까지 */
+  top: 25%;
+  bottom: 25%;
   left: 5%;
   right: 5%;
 `;
@@ -164,7 +184,7 @@ const MovingPoint = styled.div`
 const ProgressSection = styled.div`
   width: 70%;
   max-width: 900px;
-  z-index: 20; /* 포인트보다 위에 오도록 설정 */
+  z-index: 20;
 `;
 
 const ProgressInfo = styled.div`
