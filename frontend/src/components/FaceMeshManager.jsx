@@ -76,7 +76,7 @@ const FaceMeshManager = ({ isActive, onDrowsyDetected }) => {
 
       // 💡 [데이터타입 매칭] 백엔드가 요구하는 완벽한 폼 구성
       const payload = {
-        userId: "6a171e97e513581fb9f3b6bf", 
+        userId: "6a1a843ca1b8851b791f7485", 
         sessionId: "session-1", 
         windowDuration: 2,
         ear: {

@@ -28,7 +28,7 @@ const Mode3Page = () => {
 
   const completeExercise = async () => {
     const payload = {
-      userId: "6a171e97e513581fb9f3b6bf",
+      userId: "6a1a843ca1b8851b791f7485",
       type: "BLINK",
       duration: 60,
       success: true,

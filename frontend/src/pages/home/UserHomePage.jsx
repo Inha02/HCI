@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import FaceMeshManager from '../../components/FaceMeshManager';
 import AlertSound from '../../assets/sounds/alert.wav';
@@ -7,7 +7,7 @@ const electron    = window.require ? window.require('electron') : null;
 const ipcRenderer = electron ? electron.ipcRenderer : null;
 
 const UserHomePage = () => {
-  const [seconds, setSeconds]             = useState(0);
+  const [seconds, setSeconds]               = useState(0);
   const [isActive, setIsActive]           = useState(false);
   const [showBreakModal, setShowBreakModal] = useState(false);
   const [breakTimer, setBreakTimer]       = useState(20);
@@ -19,11 +19,27 @@ const UserHomePage = () => {
 
   const TOTAL_WORK_TIME = 10;
 
+
+  const webcamActivatedAt = useRef(0);
+  const webcamActiveRef = useRef(isWebcamActive);
+
+  useEffect(() => {
+    webcamActiveRef.current = isWebcamActive;
+    if (isWebcamActive) {
+      webcamActivatedAt.current = Date.now();
+      console.log("웹캠 감지 시작 시간 기록:", webcamActivatedAt.current);
+    } else {
+      webcamActivatedAt.current = 0;
+    }
+  }, [isWebcamActive]);
+
+
+  // 🎯 1분 주기 데이터 수집 타이머 (안전하게 단 1번만 셋팅)
   useEffect(() => {
     const fetchLatestSummary = async () => {
       try {
         const res = await fetch(
-          'http://localhost:5001/api/eye/summary/latest?userId=6a171e97e513581fb9f3b6bf&sessionId=session-1'
+          'http://localhost:5001/api/eye/summary/latest?userId=6a1a843ca1b8851b791f7485&sessionId=session-1'
         );
 
         if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
@@ -31,9 +47,31 @@ const UserHomePage = () => {
         const result = await res.json();
         console.log('최근 1분 요약 데이터:', result.data);
 
-        setBlinkPerMinute(result.data.blinkPerMinute ?? '-');
+        const currentBpm = result.data.blinkPerMinute;
+        setBlinkPerMinute(currentBpm ?? '-');
         setDrowsyCount(result.data.drowsyCount ?? 0);
         setIsFetchError(false);
+
+        // 현재 데이터가 들어온 시점의 시간
+        const dataReceivedAt = Date.now();
+
+        // 🔥 [핵심 제어] 
+        // 1. 현재 웹캠이 켜져 있고 
+        // 2. 데이터를 가져온 시점이 '웹캠을 켠 시점'보다 이후(미래)여야 하며 (버튼 누르기 전 잔여 데이터 무시)
+        // 3. BPM이 15 미만일 때 팝업을 띄웁니다.
+        if (
+          webcamActiveRef.current &&
+          dataReceivedAt > webcamActivatedAt.current &&
+          currentBpm !== null &&
+          currentBpm !== undefined &&
+          currentBpm !== '-' &&
+          currentBpm < 15
+        ) {
+          if (ipcRenderer) {
+            console.log("📢 팝업 조건 충족! 일렉트론 신호 전송:", currentBpm);
+            ipcRenderer.send('open-blink-toast', currentBpm);
+          }
+        }
       } catch (err) {
         console.error('요약 데이터 fetch 실패:', err);
         setIsFetchError(true);
@@ -41,16 +79,18 @@ const UserHomePage = () => {
     };
 
     fetchLatestSummary();
-    const interval = setInterval(fetchLatestSummary, 60 * 1000);
+    // 💡 테스트를 위해 팝업이 뜨는 걸 빨리 보고 싶다면 60 * 1000을 만시적으로 5 * 1000 (5초) 등으로 줄여서 확인해보세요!
+    const interval = setInterval(fetchLatestSummary, 60 * 1000); 
+    
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ drowsyCount 기반 졸음 상태 텍스트
+
+  // 🎯 졸음 로직 분기 분화 (0~2건: 집중 / 3건 이상: 주의)
   const getDrowsyLabel = () => {
     if (isFetchError || drowsyCount === null) return { text: '-', sub: '데이터 없음' };
-    if (drowsyCount === 0) return { text: '집중', sub: '이상 없음' };
-    if (drowsyCount <= 2)  return { text: '주의', sub: `졸음 ${drowsyCount}회 감지` };
-    return                        { text: '졸음', sub: `졸음 ${drowsyCount}회 감지` };
+    if (drowsyCount <= 2)  return { text: '집중', sub: `이상 없음 (졸음 ${drowsyCount}회)` };
+    return                        { text: '주의', sub: `졸음 위험! (${drowsyCount}회 감지)` };
   };
 
   const drowsyStatus = getDrowsyLabel();
@@ -149,10 +189,10 @@ const UserHomePage = () => {
           <SectionTitle>현재 상태</SectionTitle>
           <StatusCardsWrapper>
 
-            {/* ✅ BPM 카드 */}
+            {/* ✅ BPM 카드 (웹캠이 활성화된 상태에서 경고 범위일 때 색상 변경) */}
             <StatusCard>
               <Label>BPM (분당 깜박임)</Label>
-              <StatusMainValue>
+              <StatusMainValue $isWarning={isWebcamActive && blinkPerMinute !== null && blinkPerMinute < 15}>
                 {blinkPerMinute === null ? '...' : blinkPerMinute}
               </StatusMainValue>
               <StatusText>
@@ -160,14 +200,14 @@ const UserHomePage = () => {
                   ? '데이터를 불러올 수 없음'
                   : blinkPerMinute === null
                     ? '불러오는 중'
-                    : '정상 범위 15~20'}
+                    : blinkPerMinute < 15 ? '주의 (15 미만)' : '정상 범위 15~20'}
               </StatusText>
             </StatusCard>
 
             {/* ✅ 졸음 상태 카드 */}
             <StatusCard>
               <Label>졸음 상태</Label>
-              <StatusMainValue $drowsy={drowsyStatus.text === '졸음'}>
+              <StatusMainValue $drowsy={drowsyStatus.text === '주의'}>
                 {drowsyCount === null ? '...' : drowsyStatus.text}
               </StatusMainValue>
               <StatusText>{drowsyStatus.sub}</StatusText>
@@ -280,11 +320,10 @@ const Label = styled.span`
   color: #D5D5D5;
   font-size: 1.2rem;
 `;
-// ✅ $drowsy transient prop으로 경고 제거
 const StatusMainValue = styled.span`
   font-size: 3.5rem;
   font-weight: 800;
-  color: ${props => props.$drowsy ? '#FF4B4B' : '#7B86FF'};
+  color: ${props => (props.$isWarning || props.$drowsy) ? '#FF4B4B' : '#7B86FF'};
 `;
 const StatusText = styled.span`
   color: #A0A0A0;
@@ -333,7 +372,6 @@ const ProgressBarContainer = styled.div`
   border-radius: 50px;
   overflow: hidden;
 `;
-// ✅ $progress transient prop으로 DOM 경고 제거
 const ProgressBarInner = styled.div`
   width: ${props => props.$progress}%;
   height: 100%;
@@ -348,7 +386,6 @@ const TimerControls = styled.div`
   display: flex;
   gap: 15px;
 `;
-// ✅ $variant transient prop으로 DOM 경고 제거
 const ControlButton = styled.button`
   padding: 10px 25px;
   border-radius: 10px;

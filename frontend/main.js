@@ -1,9 +1,10 @@
-const { app, BrowserWindow, ipcMain, session } = require("electron");
+const { app, BrowserWindow, ipcMain, session, screen } = require("electron");
 const path = require("path");
 
 let mainWindow;
 let restWindow;
 let drowsyWindow;
+let blinkToastWindow = null; // 🚀 눈 깜빡임 토스트용 인스턴스 변수 추가
 
 let notificationSettings = {
   drowsyPopup: true,
@@ -75,6 +76,55 @@ function createDrowsyWindow() {
   });
 }
 
+// 🚀 [추가] 모니터 바탕화면 기준 전체화면 우측 하단 최상단 윈도우 생성 로직
+function createBlinkToastWindow(bpmValue) {
+  if (blinkToastWindow) return; // 이미 떠 있는 상태면 무시
+
+  // 메인 디스플레이 크기 및 작업 표시줄 규격 확보
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.workArea; 
+
+  const toastWidth = 360;
+  const toastHeight = 110;
+  const xMargin = 20; 
+  const yMargin = 30;
+
+  // 우측 하단 배치 위치 계산 정밀 공식
+  const xPos = width - toastWidth - xMargin;
+  const yPos = height - toastHeight - yMargin;
+
+  blinkToastWindow = new BrowserWindow({
+    width: toastWidth,
+    height: toastHeight,
+    x: xPos,
+    y: yPos,
+    frame: false,            // 테두리 및 닫기 바 비활성화
+    resizable: false,        // 리사이즈 불가
+    alwaysOnTop: true,       // 📌 타 프로그램(크롬, 게임 등) 위로 무조건 뚫고 나옴
+    transparent: true,       // 백라운드 알파 투명 투과 허용
+    skipTaskbar: true,       // 작업 표시줄에 프로그램 아이콘 생성 방지
+    focusable: false,        // 📌 사용자가 타이핑 중인 기존 프로그램의 포커스를 뺏지 않음
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    },
+  });
+
+  // 라우터로 라우팅 주소 연계 및 쿼리 스트링 바인딩
+  blinkToastWindow.loadURL(`http://localhost:3000/blink-popup?bpm=${bpmValue}`);
+
+  // 4초 후 자동 페이드아웃 및 윈도우 파괴 소멸
+  setTimeout(() => {
+    if (blinkToastWindow) {
+      blinkToastWindow.close();
+    }
+  }, 4000);
+
+  blinkToastWindow.on("closed", () => {
+    blinkToastWindow = null;
+  });
+}
+
 app.whenReady().then(() => {
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
       callback({
@@ -130,6 +180,16 @@ ipcMain.on("open-drowsy-window", () => {
 ipcMain.on("close-drowsy-window", () => {
   if (drowsyWindow) {
     drowsyWindow.close();
+  }
+});
+
+// 🚀 [추가] 눈 깜빡임 부족 시스템 최상단 토스트 오픈 수신 이벤트 핸들러
+ipcMain.on("open-blink-toast", (event, bpmValue) => {
+  if (notificationSettings.blinkAlert === true) {
+    console.log(`신호 받음: 전체 모니터 화면 기준 눈 깜빡임 토스트 생성 시작 (BPM: ${bpmValue})`);
+    createBlinkToastWindow(bpmValue);
+  } else {
+    console.log("차단됨: 사용자가 눈 깜빡임 부족 알림 팝업 설정을 껐습니다.");
   }
 });
 

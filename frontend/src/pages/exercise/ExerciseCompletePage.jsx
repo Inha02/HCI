@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const ExerciseCompletePage = () => {
   const navigate = useNavigate();
   const [completedCount, setCompletedCount] = useState(0);
-  const userId = '6a171e97e513581fb9f3b6bf';
+  const userId = '6a1a843ca1b8851b791f7485';
 
   // 📊 실시간 오늘 운동 현황 (X/3) 데이터 패치
   useEffect(() => {

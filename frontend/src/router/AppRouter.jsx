@@ -15,6 +15,7 @@ import MyPage from '../pages/user/MyPage';
 import EditUserInfoPage from '../pages/user/EditUserInfoPage';
 import DashboardPage from '../pages/user/DashboardPage';
 import DrowsinessPopup from '../pages/popup/DrowsinessPopup';
+import BlinkPopup from '../pages/popup/BlinkPopup'; 
 
 // Electron 환경 체크
 const electron = window.require ? window.require('electron') : null;
@@ -61,6 +62,7 @@ function AppRouter() {
         {/* 팝업창 레이아웃 (독립 창이라 네비게이션 바 불필요, 비로그인 상태 제한 없음) */}
         <Route path="/break-popup" element={<BreakPopup />}/>
         <Route path="/drowsy-popup" element={<DrowsinessPopup />} />
+        <Route path="/blink-popup" element={<BlinkPopup />} /> 
 
 
         {/* ================= 🔒 로그인 필수 권한 제어 라우트 ================= */}

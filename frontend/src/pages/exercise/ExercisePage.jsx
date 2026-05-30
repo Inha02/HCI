@@ -7,7 +7,7 @@ const ExercisePage = () => {
   
   const [completedCount, setCompletedCount] = useState(0);
 
-  const userId = '6a171e97e513581fb9f3b6bf';
+  const userId = '6a1a843ca1b8851b791f7485';
 
   const exercises = [
     {
