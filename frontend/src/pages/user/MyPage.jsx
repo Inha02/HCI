@@ -67,7 +67,6 @@ const MyPage = () => {
           <UserTextGroup>
             {/* 🎯 동적으로 세팅된 카카오 닉네임 표출 */}
             <Nickname>{userInfo.nickname} 님</Nickname>
-            <Email>{userInfo.email}</Email>
           </UserTextGroup>
           <UserActionGroup>
             {/* 🚪 로그아웃 버튼 */}
