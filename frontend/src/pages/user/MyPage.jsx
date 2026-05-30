@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,14 +8,24 @@ const ipcRenderer = electron ? electron.ipcRenderer : null;
 const MyPage = () => {
   const navigate = useNavigate();
 
-  // 1. 백엔드 연동 전 더미 데이터
-  const [userInfo] = useState({
-    nickname: '동서연',
-    email: 'Noonflower@sookmyung.ac.kr',
-    joinDate: '2025.03.01'
+ 
+  const [userInfo, setUserInfo] = useState({
+    nickname: '카카오 회원',
+    email: '이메일 정보 없음',
   });
 
-  // 2. 졸음 설정을 팝업(drowsyPopup)과 알림음(drowsySound)으로 분리 관리
+ 
+  useEffect(() => {
+    const savedName = localStorage.getItem('userName');
+    const savedEmail = localStorage.getItem('userEmail');
+
+    setUserInfo({
+      nickname: savedName || '카카오 회원',
+      email: savedEmail || '이메일 정보 없음',
+    });
+  }, []);
+
+
   const [settings, setSettings] = useState({
     drowsyPopup: JSON.parse(localStorage.getItem('drowsyPopup')) ?? true,
     drowsySound: JSON.parse(localStorage.getItem('drowsySound')) ?? true,
@@ -23,17 +33,14 @@ const MyPage = () => {
     timer202020: JSON.parse(localStorage.getItem('timer202020')) ?? true,
   });
 
-  // 토글 클릭 핸들러
   const handleToggle = (key) => {
     const newValue = !settings[key];
     const newSettings = { ...settings, [key]: newValue };
     
     setSettings(newSettings);
     
-    // 로컬 스토리지 저장 (영구 유지)
     localStorage.setItem(key, JSON.stringify(newValue));
 
-    // Electron 메인 프로세스로 설정 변경 알림 (실제 팝업 제어용)
     if (ipcRenderer) {
       ipcRenderer.send('update-notification-setting', { key, value: newValue });
     }
@@ -41,10 +48,12 @@ const MyPage = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userEmail');
     
     if (electron && electron.remote) {
-    electron.remote.session.defaultSession.clearStorageData();
+      electron.remote.session.defaultSession.clearStorageData();
     }
 
     window.location.href = '/login';
@@ -56,11 +65,11 @@ const MyPage = () => {
         {/* 상단 사용자 정보 섹션 */}
         <UserInfoSection>
           <UserTextGroup>
+            {/* 🎯 동적으로 세팅된 카카오 닉네임 표출 */}
             <Nickname>{userInfo.nickname} 님</Nickname>
             <Email>{userInfo.email}</Email>
           </UserTextGroup>
           <UserActionGroup>
-            <JoinDate>가입일: {userInfo.joinDate}</JoinDate>
             {/* 🚪 로그아웃 버튼 */}
             <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
             <EditButton onClick={() => navigate('/editinfo')}>수정하기</EditButton>
@@ -140,7 +149,6 @@ const UserTextGroup = styled.div``;
 const Nickname = styled.h1` font-size: 2.8rem; color: white; margin-bottom: 10px; font-weight: 700; `;
 const Email = styled.p` font-size: 1.2rem; color: #A0A0A0; `;
 const UserActionGroup = styled.div` display: flex; align-items: center; gap: 15px; `;
-const JoinDate = styled.span` font-size: 1.1rem; color: #A0A0A0; margin-right: 5px; `;
 
 const LogoutButton = styled.button`
   background-color: rgba(255, 99, 99, 0.15);
