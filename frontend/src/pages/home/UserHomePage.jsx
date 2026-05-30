@@ -17,8 +17,9 @@ const UserHomePage = () => {
   const [drowsyCount, setDrowsyCount]       = useState(null);
   const [isFetchError, setIsFetchError]     = useState(false);
 
-  const TOTAL_WORK_TIME = 10;
+  const [showHelp, setShowHelp]             = useState(false);
 
+  const TOTAL_WORK_TIME = 20 * 60;
 
   const webcamActivatedAt = useRef(0);
   const webcamActiveRef = useRef(isWebcamActive);
@@ -32,7 +33,6 @@ const UserHomePage = () => {
       webcamActivatedAt.current = 0;
     }
   }, [isWebcamActive]);
-
 
   // 🎯 1분 주기 데이터 수집 타이머 (안전하게 단 1번만 셋팅)
   useEffect(() => {
@@ -52,13 +52,8 @@ const UserHomePage = () => {
         setDrowsyCount(result.data.drowsyCount ?? 0);
         setIsFetchError(false);
 
-        // 현재 데이터가 들어온 시점의 시간
         const dataReceivedAt = Date.now();
 
-        // 🔥 [핵심 제어] 
-        // 1. 현재 웹캠이 켜져 있고 
-        // 2. 데이터를 가져온 시점이 '웹캠을 켠 시점'보다 이후(미래)여야 하며 (버튼 누르기 전 잔여 데이터 무시)
-        // 3. BPM이 15 미만일 때 팝업을 띄웁니다.
         if (
           webcamActiveRef.current &&
           dataReceivedAt > webcamActivatedAt.current &&
@@ -79,12 +74,10 @@ const UserHomePage = () => {
     };
 
     fetchLatestSummary();
-    // 💡 테스트를 위해 팝업이 뜨는 걸 빨리 보고 싶다면 60 * 1000을 만시적으로 5 * 1000 (5초) 등으로 줄여서 확인해보세요!
     const interval = setInterval(fetchLatestSummary, 60 * 1000); 
     
     return () => clearInterval(interval);
   }, []);
-
 
   // 🎯 졸음 로직 분기 분화 (0~2건: 집중 / 3건 이상: 주의)
   const getDrowsyLabel = () => {
@@ -189,7 +182,7 @@ const UserHomePage = () => {
           <SectionTitle>현재 상태</SectionTitle>
           <StatusCardsWrapper>
 
-            {/* ✅ BPM 카드 (웹캠이 활성화된 상태에서 경고 범위일 때 색상 변경) */}
+            {/* ✅ BPM 카드 */}
             <StatusCard>
               <Label>BPM (분당 깜박임)</Label>
               <StatusMainValue $isWarning={isWebcamActive && blinkPerMinute !== null && blinkPerMinute < 15}>
@@ -217,7 +210,19 @@ const UserHomePage = () => {
         </StatusSection>
 
         <TimerSection>
-          <SectionTitle>20-20-20 타이머</SectionTitle>
+          <TitleContainer>
+            <SectionTitle>20-20-20 타이머</SectionTitle>
+            <HelpIcon onClick={() => setShowHelp(!showHelp)}>?</HelpIcon>
+            
+            {showHelp && (
+              <HelpTooltip>
+                <h4>💡 눈 건강을 위한 20-20-20 법칙</h4>
+                <p>화면을 20분 사용한 후 20초 동안 약 6m(20피트) 떨어진 곳을 바라보세요.</p>
+                <p>타이머가 알림을 보내 규칙적인 안구 휴식을 도와드립니다!</p>
+              </HelpTooltip>
+            )}
+          </TitleContainer>
+
           <TimerCard>
             <BigTime>{formatTime(seconds)}</BigTime>
 
@@ -232,9 +237,7 @@ const UserHomePage = () => {
               </ProgressBarContainer>
 
               <TimerMessage>
-                {TOTAL_WORK_TIME === 10
-                  ? '테스트 모드: 10초 후 휴식!'
-                  : '20분 작업 후 20초간 멀리 바라보세요!'}
+                20분 작업 후 20초간 멀리 바라보세요!
               </TimerMessage>
 
               <TimerControls>
@@ -331,6 +334,71 @@ const StatusText = styled.span`
 const TimerSection = styled.section`
   margin-top: 10px;
 `;
+
+const TitleContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative; /* 도움말 말풍선의 기준 좌표 */
+  margin-bottom: 10px;
+`;
+
+const HelpIcon = styled.button`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #7B86FF;
+  background: transparent;
+  color: #7B86FF;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease-in-out;
+  padding: 0;
+  
+  &:hover {
+    background: #7B86FF;
+    color: #0C0F2F;
+  }
+`;
+
+const HelpTooltip = styled.div`
+  position: absolute;
+  top: 40px;
+  left: 0;
+  background: rgba(22, 27, 64, 0.96);
+  border: 2px solid #7B86FF;
+  border-radius: 12px;
+  padding: 16px 20px;
+  width: 340px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  animation: fadeIn 0.2s ease-out;
+
+  h4 {
+    margin: 0 0 8px 0;
+    color: #7B86FF;
+    font-size: 1.05rem;
+    font-weight: 800;
+  }
+
+  p {
+    margin: 4px 0;
+    font-size: 0.9rem;
+    color: #E5E5E5;
+    line-height: 1.4;
+    word-break: keep-all;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+`;
+
 const TimerCard = styled.div`
   display: flex;
   align-items: center;
