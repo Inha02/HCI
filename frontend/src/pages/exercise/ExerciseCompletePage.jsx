@@ -7,29 +7,39 @@ const ExerciseCompletePage = () => {
   const [completedCount, setCompletedCount] = useState(0);
   const userId = '6a1a843ca1b8851b791f7485';
 
-  // 📊 실시간 오늘 운동 현황 (X/3) 데이터 패치
+  // 📊 실시간 오늘 운동 현황 (X/3) 데이터 패치 단일화 수정
   useEffect(() => {
     const fetchCurrentStatus = async () => {
-      const types = ['TRACKING', 'FOCUS', 'BLINK'];
       try {
-        const promises = types.map(type =>
-          fetch(`http://localhost:5001/api/exercise/logs?userId=${userId}&type=${type}`)
-            .then(res => res.json())
-            .catch(() => ({ success: false }))
-        );
-
-        const results = await Promise.all(promises);
+        // 🎯 새로운 대시보드 API 주소로 단일 요청 처리
+        const res = await fetch(`http://localhost:5001/api/dashboard/summary?userId=${userId}&period=day`);
         
-        // 실제로 데이터가 들어있고 조회가 참인 경우만 필터링
-        const trueCount = results.filter(res => res.success === true && res.data && res.data.length > 0).length;
+        if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
+        
+        const result = await res.json();
+        console.log("새로운 대시보드 완료 페이지 수신 데이터:", result);
+
+        // 최근 로그 배열 안전하게 가져오기 (없으면 빈 배열 보장)
+        const recentLogs = result.exercise?.recentLogs || [];
+
+        // 🎯 TRACKING, FOCUS, BLINK 중 성공한(success: true) 고유 타입 카운트 계산
+        const targetTypes = ['TRACKING', 'FOCUS', 'BLINK'];
+        
+        const finishedTypes = targetTypes.filter(type => {
+          // 해당 타입이 존재하면서 success가 true인 기록이 1개라도 있는지 확인
+          return recentLogs.some(log => log.type === type && log.success === true);
+        });
+
+        const trueCount = finishedTypes.length; // 0 ~ 3 범위 값 생성
         setCompletedCount(trueCount);
+        
       } catch (error) {
         console.error('📊 현황 집계 오류:', error);
       }
     };
 
     fetchCurrentStatus();
-  }, []);
+  }, [userId]);
 
   return (
     <Container>
@@ -150,7 +160,6 @@ const ButtonContainer = styled.div`
   gap: 16px;
 `;
 
-// 🎯 div로 선언되어 글씨체와 클릭 효과가 최적화된 컴포넌트 버튼
 const DivButton = styled.div`
   flex: 1;
   padding: 15px 0;
@@ -159,10 +168,9 @@ const DivButton = styled.div`
   font-weight: 700;
   text-align: center;
   cursor: pointer;
-  user-select: none; /* 드래그 방지 */
+  user-select: none;
   transition: all 0.2s ease;
 
-  // 메인(primary) 버튼 스펙 정의
   background-color: ${props => props.$primary ? '#7B86FF' : 'transparent'};
   color: ${props => props.$primary ? '#FFFFFF' : '#D5D5D5'};
   border: ${props => props.$primary ? 'none' : '1px solid #333959'};

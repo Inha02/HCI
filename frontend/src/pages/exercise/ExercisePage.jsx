@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 
 const ExercisePage = () => {
   const navigate = useNavigate();
-  
   const [completedCount, setCompletedCount] = useState(0);
 
   const userId = '6a1a843ca1b8851b791f7485';
@@ -35,24 +34,30 @@ const ExercisePage = () => {
 
   useEffect(() => {
     const fetchExerciseLogs = async () => {
-      const types = ['TRACKING', 'FOCUS', 'BLINK'];
-      
       try {
-        const promises = types.map(type =>
-          fetch(`http://localhost:5001/api/exercise/logs?userId=${userId}&type=${type}`)
-            .then(res => res.json())
-            .catch(err => ({ success: false, error: err.message }))
-        );
+        // 🎯 새로운 대시보드 API 주소로 단일 요청 처리
+        const res = await fetch(`http://localhost:5001/api/dashboard/summary?userId=${userId}&period=day`);
+        
+        if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
+        
+        const result = await res.json();
+        console.log("새로운 대시보드 수신 데이터:", result);
 
-        const results = await Promise.all(promises);
-        console.log("백데이터", results);
+        // 최근 로그 배열 안전하게 가져오기 (없으면 빈 배열 보장)
+        const recentLogs = result.exercise?.recentLogs || [];
 
-        const trueCount = results.filter(result => {
-            return result.success === true && result.data && result.data.length > 0;
-          }).length;
+        // 🎯 TRACKING, FOCUS, BLINK 중 성공한(success: true) 고유 타입 카운트 계산
+        const targetTypes = ['TRACKING', 'FOCUS', 'BLINK'];
+        
+        const finishedTypes = targetTypes.filter(type => {
+          // 해당 타입이 존재하면서 success가 true인 기록이 1개라도 있는지 확인
+          return recentLogs.some(log => log.type === type && log.success === true);
+        });
+
+        const trueCount = finishedTypes.length; // 0 ~ 3 범위 값 생성
         
         setCompletedCount(trueCount);
-        console.log(`안구 운동 로그 조회 완료 (성공 개수: ${trueCount}/3)`);
+        console.log(`안구 운동 통합 로그 계산 완료 (성공 개수: ${trueCount}/3)`);
       } catch (error) {
         console.error('운동 로그 정보를 가져오는 중 에러 발생:', error);
       }
@@ -88,6 +93,7 @@ const ExercisePage = () => {
   );
 };
 
+// --- 스타일 컴포넌트 ---
 const Container = styled.div`
   width: 100%;
   min-height: 100vh;
