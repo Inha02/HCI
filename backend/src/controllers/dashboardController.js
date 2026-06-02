@@ -241,7 +241,7 @@ exports.getDashboardSummary = async (req, res) => {
       {
         $match: {
           userId: userId,
-          startTime: {
+          createdAt: {
             $gte: startDate,
             $lte: endDate,
           },
@@ -264,12 +264,12 @@ exports.getDashboardSummary = async (req, res) => {
 
     const recentExercises = await ExerciseLog.find({
       userId: userId,
-      startTime: {
+      createdAt: {
         $gte: startDate,
         $lte: endDate,
       },
     })
-      .sort({ startTime: -1 })
+      .sort({ createdAt: -1 })
       .limit(10);
 
     return res.status(200).json({
