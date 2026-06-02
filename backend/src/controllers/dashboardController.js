@@ -171,7 +171,7 @@ exports.getDashboardSummary = async (req, res) => {
     const { startDate, endDate } = getDateRange(period);
     const { labels, groupExpression } = getChartConfig(period);
 
-
+/*
     const eyeStats = await EyeMinuteSummary.aggregate([
       {
         $match: {
@@ -191,7 +191,111 @@ exports.getDashboardSummary = async (req, res) => {
         },
       },
     ]);
+*/
 
+let eyeStats = [];
+
+if (period === 'day') {
+  // 일별: 오늘 전체 1분 데이터 평균
+  eyeStats = await EyeMinuteSummary.aggregate([
+    {
+      $match: {
+        userId,
+        startTime: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        avgBlinkPerMinute: { $avg: '$blinkPerMinute' },
+        totalDrowsyCount: { $sum: '$drowsyCount' },
+        measuredMinutes: { $sum: 1 },
+      },
+    },
+  ]);
+}
+
+else if (period === 'week') {
+  // 주별: 일별 평균을 먼저 구하고, 그 일별 평균들의 평균
+  eyeStats = await EyeMinuteSummary.aggregate([
+    {
+      $match: {
+        userId,
+        startTime: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          $dayOfWeek: {
+            date: '$startTime',
+            timezone: KOREA_TIMEZONE,
+          },
+        },
+        dailyAvgBlink: { $avg: '$blinkPerMinute' },
+        dailyDrowsyCount: { $sum: '$drowsyCount' },
+        dailyMeasuredMinutes: { $sum: 1 },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        avgBlinkPerMinute: { $avg: '$dailyAvgBlink' },
+        totalDrowsyCount: { $sum: '$dailyDrowsyCount' },
+        measuredMinutes: { $sum: '$dailyMeasuredMinutes' },
+      },
+    },
+  ]);
+}
+
+else if (period === 'month') {
+  // 월별: 주차별 평균을 먼저 구하고, 그 주차별 평균들의 평균
+  eyeStats = await EyeMinuteSummary.aggregate([
+    {
+      $match: {
+        userId,
+        startTime: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          $ceil: {
+            $divide: [
+              {
+                $dayOfMonth: {
+                  date: '$startTime',
+                  timezone: KOREA_TIMEZONE,
+                },
+              },
+              7,
+            ],
+          },
+        },
+        weeklyAvgBlink: { $avg: '$blinkPerMinute' },
+        weeklyDrowsyCount: { $sum: '$drowsyCount' },
+        weeklyMeasuredMinutes: { $sum: 1 },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        avgBlinkPerMinute: { $avg: '$weeklyAvgBlink' },
+        totalDrowsyCount: { $sum: '$weeklyDrowsyCount' },
+        measuredMinutes: { $sum: '$weeklyMeasuredMinutes' },
+      },
+    },
+  ]);
+}
     const chartStats = await EyeMinuteSummary.aggregate([
       {
         $match: {
